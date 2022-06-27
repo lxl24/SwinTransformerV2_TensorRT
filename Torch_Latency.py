@@ -13,7 +13,7 @@ import argparse
  
 def parse_option():
     parser = argparse.ArgumentParser('Swin Transformer export script', add_help=False)
-    parser.add_argument('--cfg', type=str,default="/root/workplace/SwinTransformerV2_TensorRT/models/swinv2.yaml", metavar="FILE", help='path to config file', )
+    parser.add_argument('--cfg', type=str,default="/root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml", metavar="FILE", help='path to config file', )
     parser.add_argument(
         "--opts",
         help="Modify config options by adding 'KEY VALUE' pairs. ",
@@ -29,7 +29,7 @@ def parse_option():
                         help='no: no cache, '
                              'full: cache all data, '
                              'part: sharding the dataset into nonoverlapping pieces and only cache one piece')
-    parser.add_argument('--resume', default='/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv2_small_patch4_window8_256.pth', help='resume from checkpoint')
+    parser.add_argument('--resume', default='/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth', help='resume from checkpoint')
     parser.add_argument('--accumulation-steps', type=int, help="gradient accumulation steps")
     parser.add_argument('--use-checkpoint', action='store_true',
                         help="whether to use gradient checkpointing to save memory")
@@ -40,6 +40,7 @@ def parse_option():
     parser.add_argument('--tag', help='tag of experiment')
     parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
+    parser.add_argument('--type', default='swinv1', type=str, help='path to dataset')
 
     # settings for exporting onnx
     parser.add_argument('--batch-size-onnx',default=32, type=int, help="batchsize when export the onnx model")
@@ -50,8 +51,11 @@ def parse_option():
     return args, config
 
 
-def pytorch_inference(config):
-    dummy_input = torch.rand(1, 3, 256, 256).cuda() 
+def pytorch_inference(config,args):
+    if args.type == "swinv1":
+        dummy_input = torch.randn(1, 3, 224, 224, device='cuda')
+    if args.type == "swinv2":
+        dummy_input = torch.randn(1, 3, 256, 256, device='cuda')
     model = build_model(config)
     model.eval()
     model.to('cuda')
@@ -79,6 +83,6 @@ def pytorch_inference(config):
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
+    args, config = parse_option()
 
-    pytorch_inference(config)
+    pytorch_inference(config,args)

@@ -6,34 +6,58 @@ from time import time_ns,perf_counter
 from models.swin_v2 import SwinTransformerV2
 from config import get_config
 from models import build_model
-from utils import load_checkpoint
+from utils import load_checkpoint,imread,normalize
 from export_onnx import parse_option
 import torch
+import argparse
 
 ## macro define
 mean = np.array([0.5, 0.5, 0.5])
 std  = np.array([0.5, 0.5, 0.5])
-onnx_path = "/root/workplace/SwinTransformerV2_TensorRT/models/checkpints/swinv2_small_patch4_window8_256.onnx"
-pth_path = "/root/workplace/SwinTransformerV2_TensorRT/models/checkpints/swinv2_small_patch4_window8_256.pth"
 img_path = "/root/workplace/imagenet/train/test/ILSVRC2012_test_00000001.JPEG"
 
-def imread(img_path):
-    img = np.array(Image.open(img_path).convert("RGB").resize((224,224)))
-    img = normalize(img, mean, std)
-    img = np.expand_dims(img, 0)
-    return img.astype(np.float32)
 
-def normalize(data, mean, std):
-    if not isinstance(mean, np.ndarray):
-        mean = np.array(mean)
-    if not isinstance(std, np.ndarray):
-        std = np.array(std)
-    if mean.ndim == 1:
-        mean = np.reshape(mean, (1, 1, -1))
-    if std.ndim == 1:
-        std = np.reshape(std, (1, 1, -1))
-    norm = np.divide(np.subtract(np.divide(data, np.max(abs(data))),mean),std).transpose((2, 0, 1))  
-    return norm 
+def parse_option():
+    parser = argparse.ArgumentParser('Swin Transformer export script', add_help=False)
+    parser.add_argument('--cfg', type=str,default="/root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml", metavar="FILE", help='path to config file', )
+    parser.add_argument(
+        "--opts",
+        help="Modify config options by adding 'KEY VALUE' pairs. ",
+        default=None,
+        nargs='+',
+    )
+
+    # easy config modification
+    parser.add_argument('--batch-size', type=int, help="batch size for single GPU")
+    parser.add_argument('--data-path', default='../imagenet_1k', type=str, help='path to dataset')
+    parser.add_argument('--zip', action='store_true', help='use zipped dataset instead of folder dataset')
+    parser.add_argument('--cache-mode', type=str, default='part', choices=['no', 'full', 'part'],
+                        help='no: no cache, '
+                             'full: cache all data, '
+                             'part: sharding the dataset into nonoverlapping pieces and only cache one piece')
+    parser.add_argument('--resume', default='/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth', help='resume from checkpoint')
+    parser.add_argument('--onnx', default='/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx', help='resume from checkpoint')
+    parser.add_argument('--accumulation-steps', type=int, help="gradient accumulation steps")
+    parser.add_argument('--use-checkpoint', action='store_true',
+                        help="whether to use gradient checkpointing to save memory")
+    parser.add_argument('--amp-opt-level', type=str, default='O1', choices=['O0', 'O1', 'O2'],
+                        help='mixed precision opt level, if O0, no amp is used')
+    parser.add_argument('--output', default='output', type=str, metavar='PATH',
+                        help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
+    parser.add_argument('--tag', help='tag of experiment')
+    parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
+    parser.add_argument('--throughput', action='store_true', help='Test throughput only')
+    
+    # settings for exporting onnx
+    parser.add_argument('--batch-size-onnx',default=32, type=int, help="batchsize when export the onnx model")
+    parser.add_argument('--type', default='swinv1', type=str, help='path to dataset')
+    
+
+    args, unparsed = parser.parse_known_args()
+    config = get_config(args)
+
+    return args, config
+
 
 def pytorch_inference(img,config):
     seed = 0  
@@ -53,14 +77,14 @@ def pytorch_inference(img,config):
     output = np.squeeze(output.numpy())
     return output
 
-def onnx_inference(img):
+def onnx_inference(img,models):
 
     providers = [
 	  ('CUDAExecutionProvider', {
 		'device_id': 0,
 	  })
     ]
-    onnx_model = onnx.load_model("/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx")
+    onnx_model = onnx.load_model(models)
     sess = ort.InferenceSession(onnx_model.SerializeToString(), providers=['CPUExecutionProvider'])
 
     input_name = sess.get_inputs()[0].name
@@ -87,12 +111,10 @@ def check(a, b, weak=True, epsilon = 1e-5):
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
+    args, config = parse_option()
     img = imread(img_path)
     output1 = pytorch_inference(img,config)
-    print(np.max(output1))
-    output2 = onnx_inference(img)
-    print(np.max(output2))
+    output2 = onnx_inference(img,args.onnx)  
     res, diff0, diff1 = check(output1,output2)
     print(res, diff0, diff1)
     if not np.allclose(output1, output2,rtol=1.e-5,atol=1e-05):

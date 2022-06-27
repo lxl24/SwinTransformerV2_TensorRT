@@ -8,20 +8,27 @@ from config import get_config
 from models import build_model
 from utils import imread, normalize
 import torch
+import argparse
 
 
 img_path = "/root/workplace/imagenet/train/test/ILSVRC2012_test_00000001.JPEG"
 mean = np.array([0.5, 0.5, 0.5])
 std  = np.array([0.5, 0.5, 0.5])
 
-def onnx_inference(img):
+def parse_option():
+    parser = argparse.ArgumentParser('Swin Transformer export script', add_help=False)
+    parser.add_argument('--model', type=str,default="/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx", metavar="FILE", help='path to config file', )
+    args, unparsed = parser.parse_known_args()
+    return args
+
+def onnx_inference(img,onnxm):
 
     providers = [
 	  ('CUDAExecutionProvider', {
 		'device_id': 0,
 	  })
     ]
-    onnx_model = onnx.load_model("/root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx")
+    onnx_model = onnx.load_model(onnxm)
     sess = ort.InferenceSession(onnx_model.SerializeToString(), providers=providers)
 
     input_name = sess.get_inputs()[0].name
@@ -42,5 +49,6 @@ def onnx_inference(img):
 
 
 if __name__ == '__main__':
+    args = parse_option()
     img = imread(img_path)
-    onnx_inference(img)
+    onnx_inference(img,args.model)

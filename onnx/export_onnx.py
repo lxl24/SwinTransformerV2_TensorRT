@@ -11,16 +11,8 @@ import torch
 import onnx
 from config import get_config
 from models import build_model
-from utils import load_checkpoint
+from utils import load_checkpoint, imread,normalize
 
-
-# try:
-#     from pytorch_quantization import nn as quant_nn
-# except ImportError:
-#     raise ImportError(
-#         "pytorch-quantization is not installed. Install from "
-#         "https://github.com/NVIDIA/TensorRT/tree/master/tools/pytorch-quantization."
-#     )
 
 
 def parse_option():
@@ -52,25 +44,32 @@ def parse_option():
     parser.add_argument('--tag', help='tag of experiment')
     parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
-
+    
     # settings for exporting onnx
     parser.add_argument('--batch-size-onnx',default=32, type=int, help="batchsize when export the onnx model")
-
+    parser.add_argument('--type', default='swinv1', type=str, help='path to dataset')
+    
 
     args, unparsed = parser.parse_known_args()
     config = get_config(args)
+
     return args, config
 
 
-def export_onnx(model, config):
+def export_onnx(model, config,args):
     # ONNX export
     try:
         model=model.eval()
-        dummy_input = torch.randn(1, 3, 224, 224, device='cpu')
+        if args.type == "swinv1":
+            f = "models/checkpoints/swinv1_12.onnx"
+            dummy_input = torch.randn(1, 3, 224, 224, device='cpu')
+        if args.type == "swinv2":
+            f = "models/checkpoints/swinv2_12.onnx"
+            dummy_input = torch.randn(1, 3, 256, 256, device='cpu')
 
         print('\nStarting ONNX export with onnx %s...' % onnx.__version__)
         # f = config.MODEL.RESUME.replace('.pth', '.onnx')  # filename
-        f = "models/checkpoints/swinv1_12.onnx"
+        # f = "models/checkpoints/swinv1_12.onnx"
         input_names = ["input"]
         output_names = ["output"]
 
@@ -90,20 +89,16 @@ def export_onnx(model, config):
         print('ONNX export failure: %s' % e)
 
 
-def main(config):
-    # seed = 0  
-    # torch.manual_seed(seed)
-    # torch.cuda.manual_seed(seed)
-    # torch.use_deterministic_algorithms(True)
-    # np.random.seed(seed)
+def main(config,args):
+
     print(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_model(config)
     model = model.eval()
     model.to('cpu')
     max_accuracy = load_checkpoint(config, model, None, None)
-    export_onnx(model, config)
+    export_onnx(model, config,args)
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
-    main(config)
+    args, config = parse_option()
+    main(config,args)
