@@ -128,24 +128,25 @@ wget https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_sm
 ### onnx模型导出与精度验证
 这里将原模型权重导出onnx，将batch维设为动态维度，opset=12。onnx推理测试与pytorch前向结果一致。
 ```
-python onnx/export_onnx.py 
-python onnx/onnx_test.py
-```
+python onnx/export_onnx.py --type swinv1 --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml   // 通过type参数指定输入的torch模型类型{swinv1,swinv2}, resume参数指定权重文件， cfg指定模型参数配置文件，权重文件放在models/checkpoints里
+
+python onnx/onnx_test.py --onnx /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx  --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml           // 通过onnx参数指定输入的onnx模型路径, resume参数指定权重文件， cfg指定模型参数配置文件，onnx和权重文件都放在models/checkpoints里
+``` 
 <a name="Nsacv"></a>
 ### batchwise的验证数据生成
 这里使用了imagenet2012中val数据集的数据，分成不同batch并经过onnx推理后将输入输出存入npy文件中，与初赛一样，便于最后的推理验证
 ```
 cd data/
-python batch_data_gen.py 
+python batch_data_gen.py --model /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx    // 通过model参数指定输入的onnx模型
 ```
 <a name="XJYpt"></a>
 ### Trt构建与精度速度测试
 主要利用trtexec进行模型解析和构建
 ```
 sh TensorRT/build.sh
-python ONNX_Latency.py
-python Torch_Latency.py
-python TRT_test.py
+python ONNX_Latency.py --model /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx 
+python Torch_Latency.py  --type swinv1  --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml
+python TRT_test.py    // TRT_test 需要进入文件修改一下planfile的路径
 ```
 
 <a name="dPHB9"></a>
