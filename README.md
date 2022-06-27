@@ -145,7 +145,7 @@ python onnx/export_onnx.py --type swinv1 --resume /root/workplace/SwinTransforme
 python onnx/onnx_test.py --onnx /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx  --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml           // 通过onnx参数指定输入的onnx模型路径, resume参数指定权重文件， cfg指定模型参数配置文件，onnx和权重文件都放在models/checkpoints里
 ``` 
 
-### onnx作graohsurgeon
+### onnx作graphsurgeon
 ```
 python onnx/graphsurgeon/add_layernorm_with_params.py    // 需要进入文件修改onnx文件路径和保存路径
 ```
@@ -165,7 +165,7 @@ sh TensorRT/build_swinv1_layernorm_fp16.sh      //fp16 with layernorm plugin
 sh TensorRT/build_swinv1.sh                    //fp32 for swinv1
 sh TensorRT/build_swinv2_layernorm.sh  
 sh TensorRT/build_swinv2.sh                  //fp32 for swinv2
-python ONNX_Latency.py --model /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx 
+python Onnx_Latency.py --model /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx 
 python Torch_Latency.py  --type swinv1  --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml
 python TRT_test.py    // TRT_test 需要进入文件修改一下planfile的路径
 ```
