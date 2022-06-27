@@ -132,6 +132,12 @@ python onnx/export_onnx.py --type swinv1 --resume /root/workplace/SwinTransforme
 
 python onnx/onnx_test.py --onnx /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx  --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml           // 通过onnx参数指定输入的onnx模型路径, resume参数指定权重文件， cfg指定模型参数配置文件，onnx和权重文件都放在models/checkpoints里
 ``` 
+
+### onnx作graohsurgeon
+```
+python onnx/graphsurgeon/add_layernorm_with_params.py    // 需要进入文件修改onnx文件路径和保存路径
+```
+
 <a name="Nsacv"></a>
 ### batchwise的验证数据生成
 这里使用了imagenet2012中val数据集的数据，分成不同batch并经过onnx推理后将输入输出存入npy文件中，与初赛一样，便于最后的推理验证
