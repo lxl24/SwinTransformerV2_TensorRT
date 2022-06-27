@@ -182,14 +182,13 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 ![image.png](Images/nsight2.png) \
 加入了layernorm节点以后，可以看到原先的超大节点被分解，形成了以一个attention block为中心的融合节点，其余则为layernorm等分支节点。attention的总体耗时还是最大的，所以如果要追求时间上的最优，需要对window-multihead-self-attention整体进行一个cuda的实现
 <a name="wC43G"></a>
-
 4. 注意到SwinV1在替换了layernorm节点后，batchsize大于4的情况下进行`trt`时显存不够用了，这里是很奇怪的一点。
 
 
 ### 精度与加速效果
 这里均选择batch为1的数据进行测试
 
-精度对比 \
+精度对比 
 | 模型 | pytorch | onnx | FP32 | FP16 | 
 | --- | --- | --- | --- | --- |
 | SwinV1 | - | 0 | 1e-3 | 1e-3 |
@@ -197,7 +196,7 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 
 * 这里精度都是和onnx推理的结果对比
 
-运行时间对比 \
+运行时间对比 
 | 模型 | pytorch | onnx | FP32 | FP16 | 
 | --- | --- | --- | --- | --- |
 | SwinV1 | 15.01ms  | 5.309ms | 2.840ms | 2.626ms |
