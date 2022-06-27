@@ -17,7 +17,7 @@ Swin Transformer的典型应用包括图像分类，目标检测，实例分割�
 
 <a name="EIiFm"></a>
 #### 模型特点
-Swin Transformer引入了两个关键概念来解决原始ViT面临的问题——层次化特征映射和窗口注意力转换。事实上，Swin Transformer的名字来自于“**S**hifted **win**dow **Transformer**”。Swin Transformer的总体架构如下所示：<br />![](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656302388819-5a5ceec4-f0f9-43cd-af28-dadcaddd6f35.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&id=u262020be&originHeight=191&originWidth=640&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u72043bd0-4ece-441c-9745-17796535064&title=)<br />Swin的层次化特征与其窗口注意力的特点可以像下面这样理解
+Swin Transformer引入了两个关键概念来解决原始ViT面临的问题——层次化特征映射和窗口注意力转换。事实上，Swin Transformer的名字来自于“**S**hifted **win**dow **Transformer**”。Swin Transformer的总体架构如下所示：\ <br />![](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656302388819-5a5ceec4-f0f9-43cd-af28-dadcaddd6f35.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&id=u262020be&originHeight=191&originWidth=640&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u72043bd0-4ece-441c-9745-17796535064&title=)<br />Swin的层次化特征与其窗口注意力的特点可以像下面这样理解
 > 特征映射在每一层之后逐步合并和下采样，创建具有层次结构的特征映射。并且，Swin Transformer中使用的窗口MSA只在每个窗口内计算注意力。由于窗口大小在整个网络中是固定的，因此基于窗口的MSA的复杂度相对于patch的数量(即图像的大小)是线性的，相对于标准MSA的二次复杂度有了很大的提高。([原文](https://avoid.overfit.cn/post/50b62c574f364a62b53c4db363486f74))
 
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656301814308-d152477c-ca10-40c7-a1f9-c44080b19e23.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&height=292&id=DuK9z&name=image.png&originHeight=467&originWidth=818&originalType=binary&ratio=1&rotation=0&showTitle=false&size=288358&status=done&style=none&taskId=u7fe7ef9f-5931-41ba-ae7e-90ba356400b&title=&width=511.99542236328125)<br />同时还引入了移动窗口机制解决了全局信息交换的问题，使得每个窗口的特征信息可以和别的窗口进行交互。<br />![](https://cdn.nlark.com/yuque/0/2022/gif/23173278/1656302896398-771e2200-2cd5-41b5-be3c-a172ecf2d0c4.gif#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=294&id=u078bf178&originHeight=320&originWidth=320&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=uaba5ba70-2e97-40fd-a7f8-fd01b6acadd&title=&width=293.9884338378906)<br />swinv2在swinv1的基础上加入了一些新的机制，这使得两者在TensorRT部署过程中出现了不同的表现。其结构对比如下：<br />![](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656302924944-5e58b168-0e15-49b1-ba45-3a2ede1ec1e6.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&id=u3df17c71&originHeight=498&originWidth=529&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u17034517-8c70-4968-86e4-89b7cc8dc60&title=)
@@ -182,9 +182,22 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 ![image.png](Images/nsight2.png) \
 加入了layernorm节点以后，可以看到原先的超大节点被分解，形成了以一个attention block为中心的融合节点，其余则为layernorm等分支节点。attention的总体耗时还是最大的，所以如果要追求时间上的最优，需要对window-multihead-self-attention整体进行一个cuda的实现
 <a name="wC43G"></a>
+
+4. 注意到SwinV1在替换了layernorm节点后，batchsize大于4的情况下进行`trt`时显存不够用了，这里是很奇怪的一点。
+
+
 ### 精度与加速效果
 这里均选择batch为1的数据进行测试
 
+精度对比 \
+| 模型 | pytorch | onnx | FP32 | FP16 | 
+| --- | --- | --- | --- | --- |
+| SwinV1 | - | 0 | 1e-3 | 1e-3 |
+| SwinV2 | - | 0 | 1e-1 | / |
+
+* 这里精度都是和onnx推理的结果对比
+
+运行时间对比 \
 | 模型 | pytorch | onnx | FP32 | FP16 | 
 | --- | --- | --- | --- | --- |
 | SwinV1 | 15.01ms  | 5.309ms | 2.840ms | 2.626ms |
