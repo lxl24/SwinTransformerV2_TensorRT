@@ -612,7 +612,7 @@ class SwinTransformerV2(nn.Module):
 
     def forward(self, x):
         x = self.forward_features(x)
-        x = self.head(x)
+        # x = self.head(x)
         return x
 
     def flops(self):
@@ -623,3 +623,28 @@ class SwinTransformerV2(nn.Module):
         flops += self.num_features * self.patches_resolution[0] * self.patches_resolution[1] // (2 ** self.num_layers)
         flops += self.num_features * self.num_classes
         return flops
+
+
+if __name__ == "__main__":
+    model = SwinTransformerV2(img_size=256, patch_size=4, in_chans=3, num_classes=1000,
+                 embed_dim=96, depths=[ 2, 2, 18, 2 ], num_heads=[ 3, 6, 12, 24 ],
+                 window_size=8, mlp_ratio=4., qkv_bias=True, qk_scale=None,
+                 drop_rate=0., attn_drop_rate=0., drop_path_rate=0.2,
+                 norm_layer=nn.LayerNorm, ape=False, patch_norm=True,
+                 use_checkpoint=False)
+    print(model.flops())
+    x = torch.zeros((1, 3, 256, 256))
+    y=model(x)
+    # summary(model, torch.zeros((1, 1, 208, 208)))
+    
+    # names,params = list(model.named_parameters())
+    k = 0
+    for names, i in model.named_parameters():
+        l = 1
+        print("该层的名字：" + str(names))
+        print("该层的结构：" + str(list(i.size())))
+        for j in i.size():
+            l *= j
+        print("该层参数和：" + str(l))
+        k = k + l
+    print("总参数数量和：" + str(k))
