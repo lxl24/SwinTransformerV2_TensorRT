@@ -149,7 +149,11 @@ python batch_data_gen.py --model /root/workplace/SwinTransformerV2_TensorRT/mode
 ### Trt构建与精度速度测试
 主要利用trtexec进行模型解析和构建
 ```
-sh TensorRT/build.sh
+sh TensorRT/build_swinv1_fp16.sh     
+sh TensorRT/build_swinv1_layernorm_fp16.sh      //fp16 with layernorm plugin
+sh TensorRT/build_swinv1.sh                    //fp32 for swinv1
+sh TensorRT/build_swinv2_layernorm.sh  
+sh TensorRT/build_swinv2.sh                  //fp32 for swinv2
 python ONNX_Latency.py --model /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swinv1_12.onnx 
 python Torch_Latency.py  --type swinv1  --resume /root/workplace/SwinTransformerV2_TensorRT/models/checkpoints/swin_small_patch4_window7_224.pth --cfg /root/workplace/SwinTransformerV2_TensorRT/models/swin.yaml
 python TRT_test.py    // TRT_test 需要进入文件修改一下planfile的路径
