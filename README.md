@@ -115,6 +115,7 @@ pip install onnx
 pip install pillow
 pip install nvidia-tensorrt
 pip install cuda-python
+pip install graph_surgeon
 ```
 Docker 环境搭建
 ```
