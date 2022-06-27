@@ -3,6 +3,17 @@
 <a name="SwinTransformerV2"></a>
 ## SwinTransformerV2
 <br />![](Images/logo.png)<br />
+
+### 总述
+
+| **模型** | **参考链接** | **预训练权重链接** |
+| --- | --- | --- |
+| SwinV1 | [SwinV1](https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer.py) | [SwinV1_Weight](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_small_patch4_window7_224.pth) |
+| SwinV2 | [Swinv2](https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer_v2.py) | [SwinV2_Weight](https://github.com/SwinTransformer/storage/releases/download/v2.0.0/swinv2_small_patch4_window8_256.pth) |
+
+- SwinV1精度fp32最差能达到1e-3，fp16最差能达到1e-2，加速比fp16达到x2.02，fp32则达到1.87
+- SwinV2精度fp32最差为nan值，其余batch最差为常数量级误差，fp16最差能达到1e-2，加速比fp32粗看在2.03左右，待后续解决精度问题后，重新测试fp32和fp16加速
+
 <a name="0539b3b2"></a>
 ### 模型简介
 Swin Transformer是基于transformer结构的视觉任务backbone，它结合了传统cnn网络层次化的特征图思想，是vit提出以来视觉transformer主干的集大成者。文章发表时在多种下游任务中取得Sota的成绩。而Swin TransformerV2(以下简称swinv2)在swinv1的基础上改善了网络结构，以解决大规模模型训练时的收敛问题。
@@ -209,13 +220,15 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 
 
 ### 精度与加速效果
-这里均选择batch为1的数据进行测试
+这里均选择batch为1的数据进行测试,swinv1的测试都加上了layernorm plugin
 
 精度对比 
 | 模型 | pytorch | onnx | TRT-FP32 | TRT-FP16 | 
-| --- | --- | --- | --- | --- |
-| SwinV1 | - | 0 | 1e-3 | 1e-3 |
-| SwinV2 | - | 0 | 1e-1 | / |
+| --- | --- | --- | --- | --- |  
+| SwinV1 | - | 0 | max: 1.508e-3 medium: 8.304e-4  | max: 1.714e-2 medium: 1.541e-3|
+| SwinV2 | - | 0 | max: nan medium: nan| / |   |
+
+SwinV2在batch为1的情况下，trt推理输出会出现nan值，其余batch情况中位数维持在1e-1和最大值维持在常数数量级
 
 * 这里精度都是和onnx推理的结果对比
 
@@ -223,7 +236,9 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 | 模型 | pytorch | onnx | TRT-FP32 | TRT-FP16 | 
 | --- | --- | --- | --- | --- |
 | SwinV1 | 15.01ms  | 5.309ms | 2.840ms | 2.626ms |
-| SwinV2 | 23.06ms | 7.188ms | 5.500ms | / |
+| SwinV2 | 23.06ms | 7.188ms | 3.531ms | / |
+
+这里未用torchscript导出，并利用libtorch推理，后续可以尝试
 
 目前SwinV2的精度问题还未解决
 
