@@ -14,7 +14,10 @@ planFilePath   = "/root/workplace/SwinTransformerV2_TensorRT/TensorRT/TRT_Engine
 pluginPath = "/root/workplace/SwinTransformerV2_TensorRT/TensorRT/Plugins/LayerNormPlugin_with_params/"
 ResultPath = "/root/workplace/SwinTransformerV2_TensorRT/Results/"
 
-PlanFile  = planFilePath + "swinv1_12_layernorm_fp16.plan"
+#PlanFile  = planFilePath + "swinv1_12_layernorm_fp16.plan"
+#PlanFile  = planFilePath + "swinv1_12.plan"
+PlanFile  = planFilePath + "swin_12.plan"
+
 ResultFile = ResultPath  + "encoderScore.txt"
 soFileList = glob(pluginPath + "*.so")
 
@@ -88,7 +91,7 @@ with open(ResultFile, 'w') as f:
         input = ioData['input']
 
         batchSize, _, _, _ = input.shape
-        if batchSize > 16:
+        if batchSize > 4:
             continue
 
         context.set_binding_shape(0, input.shape)
