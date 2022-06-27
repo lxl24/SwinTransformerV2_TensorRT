@@ -12,7 +12,7 @@ Swin Transformer是基于transformer结构的视觉任务backbone，它结合了
 
 <a name="kTHqS"></a>
 #### 模型应用
-Swin Transformer的典型应用包括图像分类，目标检测，实例分割等。例如：
+Swin Transformer的典型应用包括图像分类，目标检测，实例分割等。例如如下的道路目标检测以及实例分割：\
 <br />![](Images/segi.png)<br />
 
 <a name="EIiFm"></a>
@@ -147,7 +147,7 @@ python test_swinV2.py
 ### 遇到的问题及解决方案
 
 1. 转onnx的时候出现roll算子不支持的问题，但pytorch在后续版本支持了这一算子，因此升级pytorch版本即可
-2. SwinV2不加载预训练模型构建的plan进行推理精度合格，而加载预训练模型构建的plan精度不合格。同时这里尝试了SwinV1的构建，加载预训练模型后精度仍然合格。推测初始化模型的某些数值与预训练权重相比较小，在trt构建时不易出现溢出问题。同时SwinV2与SwinV1不同的部分产生了误差。因此需要对SwinV2改变的部分进行逐一核验。观察onnx图：
+2. SwinV2不加载预训练模型构建的plan进行推理精度合格，而加载预训练模型构建的plan精度不合格。同时这里尝试了SwinV1的构建，加载预训练模型后精度仍然合格。推测初始化模型的某些数值与预训练权重相比较小，在trt构建时不易出现溢出问题。同时SwinV2与SwinV1不同的部分产生了误差。因此需要对SwinV2改变的部分进行逐一核验。观察cosine attention的onnx图如下：
 ![image.png](Images/cosine_attention.png)
 
 对应代码实现
@@ -174,7 +174,7 @@ Relative_pos对应代码实现
 
 3. 进行FP16推理的时候SwinV1出现了精度下降，这里观察onnx结构，发现存在大量(53)的LayerNorm节点，根据初赛的经验，LayerNorm存在计算量较大的Reduce以及开方，求根的操作，很容易将误差放大，所以可以采用Plugins的方式自己实现该算子并融合到trtexec的构建过程中，实际利用layernorm的确在fp16中解决了一部分精度问题。
 
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656306204582-33a98d53-cc2a-4dab-bc8b-feaca867dca7.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=437&id=uf83bce83&name=image.png&originHeight=763&originWidth=255&originalType=binary&ratio=1&rotation=0&showTitle=false&size=21457&status=done&style=none&taskId=u67f52e85-e970-45c3-9f69-8a533495351&title=&width=145.88890075683594)
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656306204582-33a98d53-cc2a-4dab-bc8b-feaca867dca7.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=437&id=uf83bce83&name=image.png&originHeight=763&originWidth=255&originalType=binary&ratio=1&rotation=0&showTitle=false&size=21457&status=done&style=none&taskId=u67f52e85-e970-45c3-9f69-8a533495351&title=&width=145.88890075683594#pic_center)
 <a name="Gyere"></a>
 #### Nsight分析
 ![image.png](Images/nsight1.png) \
