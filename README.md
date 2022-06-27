@@ -175,14 +175,16 @@ Relative_pos对应代码实现
 3. 进行FP16推理的时候SwinV1出现了精度下降，这里观察onnx结构，发现存在大量(53)的LayerNorm节点，根据初赛的经验，LayerNorm存在计算量较大的Reduce以及开方，求根的操作，很容易将误差放大，所以可以采用Plugins的方式自己实现该算子并融合到trtexec的构建过程中，实际利用layernorm的确在fp16中解决了一部分精度问题。
 
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656306204582-33a98d53-cc2a-4dab-bc8b-feaca867dca7.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=437&id=uf83bce83&name=image.png&originHeight=763&originWidth=255&originalType=binary&ratio=1&rotation=0&showTitle=false&size=21457&status=done&style=none&taskId=u67f52e85-e970-45c3-9f69-8a533495351&title=&width=145.88890075683594#pic_center)
-<a name="Gyere"></a>
+
+
+4. 注意到SwinV1在替换了layernorm节点后，batchsize大于4的情况下进行`trt`时显存不够用了，这里是很奇怪的一点。
+
+
 #### Nsight分析
 ![image.png](Images/nsight1.png) \
 onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可以发现trt将包含数个w-msa在内的节点融合成了一个超大节点，耗时约占整体的80%以上 \
 ![image.png](Images/nsight2.png) \
-加入了layernorm节点以后，可以看到原先的超大节点被分解，形成了以一个attention block为中心的融合节点，其余则为layernorm等分支节点。attention的总体耗时还是最大的，所以如果要追求时间上的最优，需要对window-multihead-self-attention整体进行一个cuda的实现 \
-
-4. 注意到SwinV1在替换了layernorm节点后，batchsize大于4的情况下进行`trt`时显存不够用了，这里是很奇怪的一点。
+加入了layernorm节点以后，可以看到原先的超大节点被分解，形成了以一个attention block为中心的融合节点，其余则为layernorm等分支节点。attention的总体耗时还是最大的，所以如果要追求时间上的最优，需要对window-multihead-self-attention整体进行一个cuda的实现 
 
 
 ### 精度与加速效果
