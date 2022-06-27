@@ -20,7 +20,8 @@ Swin Transformer的典型应用包括图像分类，目标检测，实例分割�
 Swin Transformer引入了两个关键概念来解决原始ViT面临的问题——层次化特征映射和窗口注意力转换。事实上，Swin Transformer的名字来自于“**S**hifted **win**dow **Transformer**”。Swin Transformer的总体架构如下所示：\ <br />![](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656302388819-5a5ceec4-f0f9-43cd-af28-dadcaddd6f35.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&id=u262020be&originHeight=191&originWidth=640&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u72043bd0-4ece-441c-9745-17796535064&title=)<br />Swin的层次化特征与其窗口注意力的特点可以像下面这样理解
 > 特征映射在每一层之后逐步合并和下采样，创建具有层次结构的特征映射。并且，Swin Transformer中使用的窗口MSA只在每个窗口内计算注意力。由于窗口大小在整个网络中是固定的，因此基于窗口的MSA的复杂度相对于patch的数量(即图像的大小)是线性的，相对于标准MSA的二次复杂度有了很大的提高。([原文](https://avoid.overfit.cn/post/50b62c574f364a62b53c4db363486f74))
 
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656301814308-d152477c-ca10-40c7-a1f9-c44080b19e23.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&height=292&id=DuK9z&name=image.png&originHeight=467&originWidth=818&originalType=binary&ratio=1&rotation=0&showTitle=false&size=288358&status=done&style=none&taskId=u7fe7ef9f-5931-41ba-ae7e-90ba356400b&title=&width=511.99542236328125)<br />同时还引入了移动窗口机制解决了全局信息交换的问题，使得每个窗口的特征信息可以和别的窗口进行交互。<br />![](https://cdn.nlark.com/yuque/0/2022/gif/23173278/1656302896398-771e2200-2cd5-41b5-be3c-a172ecf2d0c4.gif#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=294&id=u078bf178&originHeight=320&originWidth=320&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=uaba5ba70-2e97-40fd-a7f8-fd01b6acadd&title=&width=293.9884338378906)<br />swinv2在swinv1的基础上加入了一些新的机制，这使得两者在TensorRT部署过程中出现了不同的表现。其结构对比如下：<br />![](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656302924944-5e58b168-0e15-49b1-ba45-3a2ede1ec1e6.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&id=u3df17c71&originHeight=498&originWidth=529&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u17034517-8c70-4968-86e4-89b7cc8dc60&title=)
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656301814308-d152477c-ca10-40c7-a1f9-c44080b19e23.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&height=292&id=DuK9z&name=image.png&originHeight=467&originWidth=818&originalType=binary&ratio=1&rotation=0&showTitle=false&size=288358&status=done&style=none&taskId=u7fe7ef9f-5931-41ba-ae7e-90ba356400b&title=&width=511.99542236328125)<br />同时还引入了移动窗口机制解决了全局信息交换的问题，使得每个窗口的特征信息可以和别的窗口进行交互。<br />
+![](https://cdn.nlark.com/yuque/0/2022/gif/23173278/1656302896398-771e2200-2cd5-41b5-be3c-a172ecf2d0c4.gif#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=294&id=u078bf178&originHeight=320&originWidth=320&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=uaba5ba70-2e97-40fd-a7f8-fd01b6acadd&title=&width=293.9884338378906)<br />swinv2在swinv1的基础上加入了一些新的机制，这使得两者在TensorRT部署过程中出现了不同的表现。其结构对比如下：<br />![](https://cdn.nlark.com/yuque/0/2022/png/23173278/1656302924944-5e58b168-0e15-49b1-ba45-3a2ede1ec1e6.png#clientId=ufe960e4f-9385-4&crop=0&crop=0&crop=1&crop=1&from=paste&id=u3df17c71&originHeight=498&originWidth=529&originalType=url&ratio=1&rotation=0&showTitle=false&status=done&style=none&taskId=u17034517-8c70-4968-86e4-89b7cc8dc60&title=)
 
 具体表现可以归纳为：
 
@@ -89,11 +90,12 @@ NVIDIA出的FastTransfomer中已经包含了高效的Swinv1实现，并且可以
 ### 环境搭建
 <a name="Rt7bi"></a>
 ###### 参考了官方教程 ----->[Swin环境搭建](https://github.com/microsoft/Swin-Transformer/blob/main/get_started.md)
-conda环境
+
+conda环境搭建
 ```
 conda create -n swin2 python=3.7 -y
 conda activate swin2
-conda install pytorch==1.8.0 torchvision==0.9.0 cudatoolkit=10.2 -c pytorch
+pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 pip install numpy
 pip install timm==0.4.12
 pip install opencv-python==4.4.0.46 termcolor==1.1.0 yacs==0.1.8
@@ -102,11 +104,13 @@ pip install onnx
 pip install pillow
 pip install nvidia-tensorrt
 pip install cuda-python
+pip install nvidia-tensorrt
 ```
 Docker 环境搭建
 ```
 nvidia-docker pull registry.cn-hangzhou.aliyuncs.com/trt2022/dev
 ```
+
 <a name="AA56y"></a>
 ### 预训练权重
 Swin Transformer预训练权重，这里参考初赛的模型大小，选择small规模的SwinV1和SwinV2模型。
@@ -140,13 +144,19 @@ python batch_data_gen.py
 主要利用trtexec进行模型解析和构建
 ```
 sh TensorRT/build.sh
-python test_swinV2.py
+python ONNX_Latency.py
+python Torch_Latency.py
+python TRT_test.py
 ```
 
 <a name="dPHB9"></a>
 ### 遇到的问题及解决方案
 
-1. 转onnx的时候出现roll算子不支持的问题，但pytorch在后续版本支持了这一算子，因此升级pytorch版本即可
+1. 转onnx的时候出现roll算子不支持的问题，但pytorch官方在1.9版本支持了这一算子，因此升级pytorch版本即可，目前升级到了1.10，对应cuda-11.3 
+```
+pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+```
+
 2. SwinV2不加载预训练模型构建的plan进行推理精度合格，而加载预训练模型构建的plan精度不合格。同时这里尝试了SwinV1的构建，加载预训练模型后精度仍然合格。推测初始化模型的某些数值与预训练权重相比较小，在trt构建时不易出现溢出问题。同时SwinV2与SwinV1不同的部分产生了误差。因此需要对SwinV2改变的部分进行逐一核验。观察cosine attention的onnx图如下：
 ![image.png](Images/cosine_attention.png)
 
@@ -170,7 +180,7 @@ Relative_pos对应代码实现
 ```
 
 - 其中cpb_mlp由线性层和relu组成 
-- 目前看来问题最有可能出在cosine attention中，实现一个plugin去替换它，目前只实现了其中L2Norm的plugin，测试结果并没有解决精度问题
+- 目前看来问题最有可能出在cosine attention中，因此计划实现一个plugin去替换它，目前只实现了其中L2Norm的plugin，测试结果仍没有解决精度问题。
 
 3. 进行FP16推理的时候SwinV1出现了精度下降，这里观察onnx结构，发现存在大量(53)的LayerNorm节点，根据初赛的经验，LayerNorm存在计算量较大的Reduce以及开方，求根的操作，很容易将误差放大，所以可以采用Plugins的方式自己实现该算子并融合到trtexec的构建过程中，实际利用layernorm的确在fp16中解决了一部分精度问题。
 
@@ -179,6 +189,7 @@ Relative_pos对应代码实现
 
 4. 注意到SwinV1在替换了layernorm节点后，batchsize大于4的情况下进行`trt`时显存不够用了，这里是很奇怪的一点。
 
+5. 完成了INT8的推理脚本路径在TensorRT/INT8/quant.py, 在解决fp16的精度问题之后，继续完成int8的优化。
 
 #### Nsight分析
 ![image.png](Images/nsight1.png) \
@@ -191,7 +202,7 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 这里均选择batch为1的数据进行测试
 
 精度对比 
-| 模型 | pytorch | onnx | FP32 | FP16 | 
+| 模型 | pytorch | onnx | TRT-FP32 | TRT-FP16 | 
 | --- | --- | --- | --- | --- |
 | SwinV1 | - | 0 | 1e-3 | 1e-3 |
 | SwinV2 | - | 0 | 1e-1 | / |
@@ -199,7 +210,7 @@ onnx没有做任何处理直接构建的的Engine Profiling结果如上图，可
 * 这里精度都是和onnx推理的结果对比
 
 运行时间对比 
-| 模型 | pytorch | onnx | FP32 | FP16 | 
+| 模型 | pytorch | onnx | TRT-FP32 | TRT-FP16 | 
 | --- | --- | --- | --- | --- |
 | SwinV1 | 15.01ms  | 5.309ms | 2.840ms | 2.626ms |
 | SwinV2 | 23.06ms | 7.188ms | 5.500ms | / |
