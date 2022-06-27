@@ -14,7 +14,7 @@ planFilePath   = "/root/workplace/SwinTransformerV2_TensorRT/TensorRT/TRT_Engine
 pluginPath = "/root/workplace/SwinTransformerV2_TensorRT/TensorRT/Plugins/LayerNormPlugin_with_params/"
 ResultPath = "/root/workplace/SwinTransformerV2_TensorRT/Results/"
 
-PlanFile  = planFilePath + "swinv1_12_layerNorm.plan"
+PlanFile  = planFilePath + "swinv1_12_layernorm_fp16.plan"
 ResultFile = ResultPath  + "encoderScore.txt"
 soFileList = glob(pluginPath + "*.so")
 
