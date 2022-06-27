@@ -104,7 +104,6 @@ pip install onnx
 pip install pillow
 pip install nvidia-tensorrt
 pip install cuda-python
-pip install nvidia-tensorrt
 ```
 Docker 环境搭建
 ```
